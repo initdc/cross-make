@@ -47,38 +47,61 @@ def main(argv)
   _arch = argv[0]
   _cross = argv[1]
 
+  if %w[-h --help help h].include?(_arch)
+    puts "Usage: make-env ARCH CROSS_COMPILE"
+    puts "                          |"
+    puts "                     can be [auto]"
+    puts
+    puts "Warn: you need manually eval output"
+    puts " try: eval $(make-env armhf auto)"
+    return
+  end
+
   unless _arch
-    puts "Linux architecture list:"
+    puts "Linux architecture list: "
     ARCH.each_index do |index|
       puts "  #{index + 1}: #{ARCH[index]}"
     end
-    print "Select: "
-    input = gets.chomp
 
-    if input.empty?
-      exit 1
+    print "Select: "
+    in_arch = gets.chomp
+
+    if in_arch.empty?
+      _arch = "x86"
+    elsif ARCH.include?(in_arch)
+      _arch = in_arch
     else
-      index = input.to_i - 1
+      index = in_arch.to_i - 1
       _arch = ARCH[index]
-      puts
     end
+
+    print "CROSS_COMPILE: "
+    in_cross = gets.chomp
+    _cross = if in_cross.empty?
+               nil
+             else
+               in_cross.chomp
+             end
+    puts
   end
 
   env_arch = nil
   env_cross = nil
 
-  arch = _arch
-  arch = "arm" if %w[armeb armhf armv5 armv6 armv7].include?(_arch)
-  arch = "arm64" if %w[aarch aarch64 arm64v8 armv8].include?(_arch)
-  arch = "x86" if %w[amd64 x86_64].include?(_arch)
-  arch = "x86" if _arch[0] == "i" && _arch[2..3] == "86"
-  env_arch = arch
+  if _arch
+    arch = _arch
+    arch = "arm" if %w[armeb armhf armv5 armv6 armv7].include?(_arch)
+    arch = "arm64" if %w[aarch aarch64 arm64v8 armv8].include?(_arch)
+    arch = "x86" if %w[amd64 x86_64].include?(_arch)
+    arch = "x86" if _arch[0] == "i" && _arch[2..3] == "86"
+    env_arch = arch
+  end
 
   auto = _cross == "auto"
   if auto
     query = _arch
     query = "arm-linux-gnueabihf-" if _arch.include?("hf")
-    query = "aarch64" if %w[arm64v8 armv8].include?(_arch)
+    query = "aarch64" if %w[arm64 arm64v8 armv8].include?(_arch)
     query = "x86_64" if %w[amd64 x86].include?(_arch)
     query = "i686" if _arch[0] == "i" && _arch[2..3] == "86"
 
@@ -88,11 +111,20 @@ def main(argv)
         break
       end
     end
+  else
+    env_cross = _cross
   end
 
-  cmd = "export ARCH=#{env_arch}"
-  cmd += " CROSS_COMPILE=#{env_cross}" if env_cross
-  puts cmd
+  cmd = "export"
+  if env_arch
+    cmd += " ARCH=#{env_arch}"
+    ENV["ARCH"] = env_arch
+  end
+  if env_cross
+    cmd += " CROSS_COMPILE=#{env_cross}"
+    ENV["CROSS_COMPILE"] = env_cross
+  end
+  puts cmd if cmd != "export"
 end
 
 main(ARGV)
