@@ -1,0 +1,27 @@
+FROM ubuntu:{version}
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN set -e \
+    && sed -i 's/# deb-src/deb-src/g' /etc/apt/sources.list \
+    && apt-get update
+
+RUN set -e \
+    && apt-get install --no-install-recommends -y \
+    gcc-aarch64-linux-gnu \
+    gcc-arm-linux-gnueabi \
+    gcc-arm-linux-gnueabihf \
+    gcc-mips-linux-gnu \
+    gcc-mips64-linux-gnuabi64 \
+    gcc-mips64el-linux-gnuabi64 \
+    gcc-mipsel-linux-gnu \
+    gcc-powerpc-linux-gnu \
+    gcc-powerpc64-linux-gnu \
+    gcc-powerpc64le-linux-gnu \
+    gcc-riscv64-linux-gnu \
+    gcc-s390x-linux-gnu \
+    gcc-i686-linux-gnu \
+    gcc
+
+RUN set -e \
+    && apt-get build-dep -y linux
