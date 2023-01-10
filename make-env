@@ -44,8 +44,25 @@ CROSS_COMPILE = %w[
 ].freeze
 
 def main(argv)
-  _arch = argv[0] || "x86"
+  _arch = argv[0]
   _cross = argv[1]
+
+  unless _arch
+    puts "Linux architecture list:"
+    ARCH.each_index do |index|
+      puts "  #{index + 1}: #{ARCH[index]}"
+    end
+    print "Select: "
+    input = gets.chomp
+
+    if input.empty?
+      exit 1
+    else
+      index = input.to_i - 1
+      _arch = ARCH[index]
+      puts
+    end
+  end
 
   env_arch = nil
   env_cross = nil
