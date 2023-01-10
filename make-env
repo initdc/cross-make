@@ -1,0 +1,81 @@
+#!/bin/env ruby
+
+# https://github.com/torvalds/linux/tree/master/arch
+ARCH = %w[
+  alpha
+  arc
+  arm
+  arm64
+  csky
+  hexagon
+  ia64
+  loongarch
+  m68k
+  microblaze
+  mips
+  nios2
+  openrisc
+  parisc
+  powerpc
+  riscv
+  s390
+  sh
+  sparc
+  um
+  x86
+  xtensa
+].freeze
+
+CROSS_COMPILE = %w[
+  aarch64-linux-gnu-
+  arm-linux-gnueabi-
+  arm-linux-gnueabihf-
+  i686-linux-gnu-
+  mips-linux-gnu-
+  mipsel-linux-gnu-
+  mips64-linux-gnuabi64-
+  mips64el-linux-gnuabi64-
+  powerpc-linux-gnu-
+  powerpc64-linux-gnu-
+  powerpc64le-linux-gnu-
+  riscv64-linux-gnu-
+  s390x-linux-gnu-
+  x86_64-linux-gnu-
+].freeze
+
+def main(argv)
+  _arch = argv[0] || "x86"
+  _cross = argv[1]
+
+  env_arch = nil
+  env_cross = nil
+
+  arch = _arch
+  arch = "arm" if %w[armeb armhf armv5 armv6 armv7].include?(_arch)
+  arch = "arm64" if %w[aarch aarch64 arm64v8 armv8].include?(_arch)
+  arch = "x86" if %w[amd64 x86_64].include?(_arch)
+  arch = "x86" if _arch[0] == "i" && _arch[2..3] == "86"
+  env_arch = arch
+
+  auto = _cross == "auto"
+  if auto
+    query = _arch
+    query = "arm-linux-gnueabihf-" if _arch.include?("hf")
+    query = "aarch64" if %w[arm64v8 armv8].include?(_arch)
+    query = "x86_64" if %w[amd64 x86].include?(_arch)
+    query = "i686" if _arch[0] == "i" && _arch[2..3] == "86"
+
+    CROSS_COMPILE.each do |cross|
+      if cross.start_with?(query)
+        env_cross = cross
+        break
+      end
+    end
+  end
+
+  cmd = "export ARCH=#{env_arch}"
+  cmd += " CROSS_COMPILE=#{env_cross}" if env_cross
+  puts cmd
+end
+
+main(ARGV)
