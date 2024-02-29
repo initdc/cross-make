@@ -2,11 +2,11 @@
 
 require "exec"
 
-REGISTRY     = "docker.io"
-DOCKER_USER  = "initdc"
+REGISTRY = "docker.io"
+DOCKER_USER = "initdc"
 DOCKER_IMAGE = "cross-make"
-LATEST       = "22.10-uboot"
-ACTION       = ""
+LATEST = "22.10-uboot"
+ACTION = ""
 
 CACHE_DIR = "cache/docker"
 
@@ -15,7 +15,7 @@ VERSION = {
   "18.04": "7",
   "20.04": "9",
   "22.04": "11",
-  "22.10": "12",
+  "22.10": "12"
 }
 
 IGNORES = {
@@ -23,7 +23,7 @@ IGNORES = {
     lz4
     python3-asteval
     python3-sphinxcontrib.apidoc
-  ],
+  ]
 }
 
 TMPL = %w[
@@ -37,7 +37,7 @@ docker_user = ENV["DOCKER_USER"]? || DOCKER_USER
 docker_image = ENV["DOCKER_IMAGE"]? || DOCKER_IMAGE
 imagename = ENV["IMAGENAME"]? || "#{docker_user}/#{docker_image}"
 
-`mkdir -p #{CACHE_DIR}`
+Exec.run("mkdir -p #{CACHE_DIR}")
 
 TMPL.each do |tmpl|
   tmpl_file = "Dockerfile.#{tmpl}"
@@ -48,7 +48,7 @@ TMPL.each do |tmpl|
     tag = "#{u_ver}-#{tmpl}#{g_ver}" if tmpl == "gcc"
     dockerfile = "Dockerfile.#{tag}"
     content = tmpl_content.gsub("{version}", u_ver)
-
+    
     ignores = IGNORES[u_ver_sym]?
     if ignores
       ignores.each do |software|

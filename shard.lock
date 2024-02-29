@@ -2,5 +2,5 @@ version: 2.0
 shards:
   exec:
     git: https://github.com/initdc/exec.git
-    version: 0.0.1+git.commit.02c9cd6eafcac539b1aeef54c2b7b0e2fe004b49
+    version: 0.0.3+git.commit.ec2afc93660ae9bc22d907f5b10ca1fdefcafe10
 
