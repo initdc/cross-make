@@ -27,12 +27,12 @@ def install_cc
 end
 
 def uboot_deps
-  cmd = "#{sudo_}apt-get build-dep -y u-boot"
+  cmd = "DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai #{sudo_}apt-get build-dep -y u-boot"
   Libexec.code(cmd, Edeps)
 end
 
 def linux_deps
-  cmd = "#{sudo_}apt-get build-dep -y linux"
+  cmd = "DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai #{sudo_}apt-get build-dep -y linux"
   Libexec.code(cmd, Edeps)
 end
 

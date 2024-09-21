@@ -1,0 +1,87 @@
+name: Build u-boot
+
+env:
+  CCACHE_DIR: /root/ccache
+  GCC: riscv64-unknown-linux-gnu-gcc
+  CCACHE_COMPILERTYPE: gcc
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container
+    container:
+      image: initdc/thead-kernel:latest
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#defaultsrun
+    defaults:
+      run:
+        working-directory: /root
+    steps:
+      - name: Prepare package
+        run: apt-get update && apt-get install -y sudo git ruby tree ccache
+      - name: Checkout
+        run: |
+          git clone --depth 1 https://github.com/initdc/LicheePi4A.git workdir
+          cd workdir
+          git submodule update --init --recursive --depth 1  external/revyos/thead-u-boot
+      - name: Prepare scripts deps
+        run: |
+          gem install bundler
+          cd workdir/scripts && bundle install
+
+          mkdir -p $CCACHE_DIR
+          cd /usr/lib/ccache && ln -s ../../bin/ccache $GCC
+          export PATH="/usr/lib/ccache:/root/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.1/bin:$PATH"
+          which $GCC
+          $GCC -v
+
+          ccache -F 0 -M 10GiB
+          ccache -s
+      - name: Restore linux build cache
+        id: restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-u-boot-${{ env.GCC }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-u-boot-${{ env.GCC }}-
+            ${{ runner.os }}-u-boot-
+      - name: Build release
+        run: |
+          export PATH="/usr/lib/ccache:/root/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.1/bin:$PATH"
+
+          cd workdir && ruby scripts/ci_u-boot.rb
+      - name: Check ccache
+        run: |
+          ccache -s
+          du -hd0 $CCACHE_DIR
+      - name: Cache u-boot build
+        id: cache
+        if: ${{ github.event_name }} == "workflow_dispatch"
+        uses: actions/cache/save@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-u-boot-${{ env.GCC }}-${{ github.sha }}
+      - name: Tree dirs
+        run: |
+          tree /root/workdir/target
+          tree /root/workdir/upload
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: "/root/workdir/upload/*"
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: "/root/workdir/upload/*"

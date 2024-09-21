@@ -4,7 +4,7 @@ require "libexec"
 require_relative "error"
 require_relative "sudo"
 
-CCACHE_DIR = "#{Dir.home}/ccache"
+CCACHE_DIR = ENV["CCACHE_DIR"] || "#{Dir.home}/ccache"
 
 def ccc_prepare() 
   `mkdir -p #{CCACHE_DIR}`
@@ -25,7 +25,7 @@ end
 
 def ccc_vendor_env(*args)
   if args.empty?
-    "CCACHE_DIR=#{CCACHE_DIR}"
+    "CCACHE_DIR=#{CCACHE_DIR} PATH=/usr/lib/ccache:$PATH"
   else
     "CCACHE_DIR=#{CCACHE_DIR} #{ccc_add_vendor(args)}"
   end

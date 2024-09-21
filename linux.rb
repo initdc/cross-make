@@ -11,20 +11,21 @@ CROSS_MAKE = true
 CONFIG = "x86_64_defconfig"
 CONFIGS = {
   "x86_64_defconfig" => ["", ""],
+  "defconfig" => ["arm64","aarch64-linux-gnu-"],
   # "starfive_visionfive2_defconfig" => ["riscv", "riscv64-linux-gnu-"],
 }.freeze
 FILES = "*.tar"
 
 Libexec.run("mkdir -p #{arg_dirs}")
 
-jammy_apt
+# jammy_apt
 linux_deps
 install_cc if CROSS_MAKE
 ccc_prepare
 ccc_set_limit(0, "10GiB")
 
 Dir.chdir(BUILD_DIR) do
-  clone_cmd = "git clone https://github.com/andy-shev/linux.git --depth 1"
+  clone_cmd = "git clone -b linux-6.6.y https://github.com/gregkh/linux.git --depth 1"
 
   Libexec.run(clone_cmd) unless Libexec.code("test -d linux").zero?
 
@@ -39,6 +40,7 @@ Dir.chdir(BUILD_DIR) do
                   "#{ccc_vendor_env} ARCH=#{arch} make #{config}"
                 end
       Libexec.code(config_cmd, Econfig)
+      Libexec.code("scripts/config --enable CONFIG_BLK_DEV_RAM", Econfig)
 
       make_cmd = if arch.empty?
                    "#{ccc_vendor_env} make tar-pkg -j$(nproc)"
