@@ -4,6 +4,7 @@ require "libexec"
 
 require_relative "lib/error"
 require_relative "lib/deps"
+require_relative "lib/ccache"
 require_relative "lib/dir"
 
 CROSS_MAKE = true
@@ -19,6 +20,8 @@ Libexec.run("mkdir -p #{arg_dirs}")
 jammy_apt
 linux_deps
 install_cc if CROSS_MAKE
+ccc_prepare
+ccc_set_limit(0, "10GiB")
 
 Dir.chdir(BUILD_DIR) do
   clone_cmd = "git clone https://github.com/andy-shev/linux.git --depth 1"
@@ -31,16 +34,16 @@ Dir.chdir(BUILD_DIR) do
       cross = arr[1]
 
       config_cmd = if arch.empty?
-                  "make #{config}"
+                  "#{ccc_vendor_env} make #{config}"
                 else
-                  "ARCH=#{arch} make #{config}"
+                  "#{ccc_vendor_env} ARCH=#{arch} make #{config}"
                 end
       Libexec.code(config_cmd, Econfig)
 
       make_cmd = if arch.empty?
-                   "make tar-pkg -j$(nproc)"
+                   "#{ccc_vendor_env} make tar-pkg -j$(nproc)"
                  else
-                   "ARCH=#{arch} CROSS_COMPILE=#{cross} make tar-pkg -j$(nproc)"
+                   "#{ccc_vendor_env} ARCH=#{arch} CROSS_COMPILE=#{cross} make tar-pkg -j$(nproc)"
                  end
       result = Libexec.code(make_cmd).zero?
       next unless result

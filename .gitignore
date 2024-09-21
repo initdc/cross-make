@@ -1,8 +1,8 @@
-target/
-upload/
+/target/
+/upload/
 
-build/
-cache/
+/build/
+/cache/
 
-u-boot/
-linux/
+/u-boot/
+/linux/
