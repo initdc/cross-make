@@ -1,0 +1,13 @@
+name: Merge or Pull requests
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - "dev"
+  #     - "next"
+  pull_request:
+
+concurrency:
+  group: ${{ github.sha }}
+  cancel-in-progress: true

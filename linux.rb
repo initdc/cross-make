@@ -7,7 +7,7 @@ require_relative "lib/deps"
 require_relative "lib/ccache"
 require_relative "lib/dir"
 
-CROSS_MAKE = true
+CROSS_MAKE = false
 CONFIG = "x86_64_defconfig"
 CONFIGS = {
   "x86_64_defconfig" => ["", ""],
@@ -17,7 +17,7 @@ FILES = "*.tar"
 
 Libexec.run("mkdir -p #{arg_dirs}")
 
-jammy_apt
+# jammy_apt
 linux_deps
 install_cc if CROSS_MAKE
 ccc_prepare
